@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công cụ Quy đổi các phương thức Bách khoa</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Inter font and rounded corners */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fef2f2; /* Light red background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 32px;
+            border-radius: 16px; /* Rounded corners for the main container */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        .input-group label {
+            font-weight: 600;
+            color: #b91c1c; /* Dark red text */
+            margin-bottom: 8px;
+            display: block;
+        }
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ef4444; /* Red border */
+            border-radius: 8px; /* Rounded corners for inputs/selects */
+            font-size: 16px;
+            color: #475569;
+            box-sizing: border-box; /* Ensures padding doesn't affect total width */
+        }
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #dc2626; /* Red focus border */
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2); /* Red shadow on focus */
+        }
+        .button-primary {
+            background-color: #dc2626; /* Red button */
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px; /* Rounded corners for button */
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+        .button-primary:hover {
+            background-color: #b91c1c; /* Darker red on hover */
+        }
+        .result-box {
+            background-color: #fee2e2; /* Lighter red background for result */
+            border-left: 5px solid #dc2626; /* Red border */
+            padding: 16px;
+            border-radius: 8px; /* Rounded corners for result box */
+            margin-top: 24px;
+            font-size: 1.15em;
+            font-weight: 600;
+            color: #b91c1c; /* Dark red text */
+        }
+        .warning-message {
+            color: #ef4444; /* Red warning text */
+            font-size: 0.9em;
+            margin-top: 16px;
+            text-align: center;
+        }
+        .disabled-option {
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center mb-2 text-red-700">Công cụ Quy đổi các phương thức Bách khoa</h1>
+        <p class="text-center text-gray-600 mb-8">Made by HowdeepTry</p>
+
+        <div class="mb-6 input-group">
+            <label for="score" id="score_label">Điểm đầu vào:</label>
+            <input type="text" id="score" name="score" placeholder="Ví dụ: 29.5" required class="rounded-lg">
+        </div>
+
+        <div class="mb-8 input-group">
+            <label for="input_type">Chọn phương thức đầu vào:</label>
+            <select id="input_type" name="input_type" required class="rounded-lg">
+                <option value="xttn_1_2">XTTN diện 1.2 (thang 100)</option>
+                <option value="xttn_1_3">XTTN diện 1.3 (thang 100)</option>
+                <option value="dgtd">ĐGTD (thang 100)</option>
+            </select>
+        </div>
+
+        <button onclick="performConversion()" class="button-primary rounded-lg">Quy đổi</button>
+
+        <div id="result" class="result-box hidden">
+            <!-- Kết quả sẽ hiển thị ở đây -->
+        </div>
+
+        <div class="warning-message">
+            *Lưu ý: Dữ liệu quy đổi dựa trên các bảng đã cung cấp cho Tổ hợp A00. Một số khoảng điểm không có dữ liệu cho XTTN 1.2 và XTTN 1.3.
+        </div>
+    </div>
+
+    <script>
+        // Dữ liệu quy đổi từ các phương thức đầu vào sang điểm Tổ hợp A00 (thang 30)
+        // Mỗi loại quy đổi sẽ có một danh sách các tuple (a, b, c, d)
+        // a, b: khoảng điểm của phương thức đầu vào (input)
+        // c, d: khoảng điểm của phương thức đầu ra (output - Tổ hợp A00 thang 30)
+        const CONVERSION_DATA = {
+            'xttn_1_2': { // XTTN diện 1.2 (input) -> Tổ hợp A00 (thang 30) (output)
+                label: "Điểm XTTN diện 1.2 (thang 100):",
+                outputLabel: "Điểm Tổ hợp A00 tương ứng (thang 30):",
+                ranges: [
+                    { a: 91.61, b: 100, c: 29.25, d: 30 },
+                    { a: 78.50, b: 91.61, c: 28.46, d: 29.25 },
+                    { a: 72.88, b: 78.50, c: 27.55, d: 28.46 },
+                    { a: 55, b: 72.88, c: 25.08, d: 27.55 }
+                ]
+            },
+            'xttn_1_3': { // XTTN diện 1.3 (input) -> Tổ hợp A00 (thang 30) (output)
+                label: "Điểm XTTN diện 1.3 (thang 100):",
+                outputLabel: "Điểm Tổ hợp A00 tương ứng (thang 30):",
+                ranges: [
+                    { a: 94.64, b: 100, c: 29.25, d: 30 },
+                    { a: 85.20, b: 94.64, c: 28.46, d: 29.25 },
+                    { a: 66.57, b: 85.20, c: 27.55, d: 28.46 },
+                    { a: 55, b: 66.57, c: 25.08, d: 27.55 }
+                ]
+            },
+            'dgtd': { // ĐGTD (input) -> Tổ hợp A00 (thang 30) (output)
+                label: "Điểm ĐGTD (thang 100):",
+                outputLabel: "Điểm Tổ hợp A00 tương ứng (thang 30):",
+                ranges: [
+                    { a: 83.98, b: 100, c: 29.25, d: 30 },
+                    { a: 76.23, b: 83.98, c: 28.46, d: 29.25 },
+                    { a: 69.88, b: 76.23, c: 27.55, d: 28.46 },
+                    { a: 59.71, b: 69.88, c: 25.08, d: 27.55 },
+                    { a: 55.22, b: 59.71, c: 23.46, d: 25.08 },
+                    { a: 46.95, b: 55.22, c: 19.5, d: 23.46 }
+                ]
+            }
+        };
+
+        function calculateConversion(x, inputType) {
+            /**
+             * Tính điểm quy đổi từ điểm đầu vào (x) sang điểm Tổ hợp A00 (thang 30)
+             * dựa trên công thức y = (d-c)/(b-a) * (x-a) + c
+             */
+            if (CONVERSION_DATA[inputType]) {
+                const { ranges } = CONVERSION_DATA[inputType];
+                for (const { a, b, c, d } of ranges) {
+                    // Kiểm tra xem điểm x có nằm trong khoảng [a, b] không
+                    // Hoặc nếu x là biên trên của khoảng và là khoảng cuối cùng
+                    if ((x >= a && x <= b) || (x > b && a === Math.max(...ranges.map(r => r.a)))) {
+                        if (b === a) { // Tránh chia cho 0 nếu khoảng là một điểm duy nhất
+                            return c;
+                        }
+                        const y = ((d - c) / (b - a)) * (x - a) + c;
+                        return Math.round(y * 1000) / 1000; // Làm tròn 3 chữ số thập phân
+                    }
+                }
+                return "Không tìm thấy khoảng điểm phù hợp.";
+            } else {
+                return "Phương thức quy đổi không được hỗ trợ.";
+            }
+        }
+
+        function performConversion() {
+            const scoreInput = document.getElementById('score');
+            const inputTypeSelect = document.getElementById('input_type');
+            const resultDiv = document.getElementById('result');
+
+            let score = parseFloat(scoreInput.value);
+            const inputType = inputTypeSelect.value;
+
+            // Ẩn kết quả cũ
+            resultDiv.classList.add('hidden');
+            resultDiv.textContent = '';
+
+            if (isNaN(score)) {
+                resultDiv.textContent = "Vui lòng nhập một số hợp lệ cho điểm.";
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+
+            const calculatedResult = calculateConversion(score, inputType);
+            const outputLabel = CONVERSION_DATA[inputType].outputLabel;
+
+            if (calculatedResult !== null) {
+                resultDiv.textContent = `${outputLabel} ${calculatedResult}`;
+                resultDiv.classList.remove('hidden');
+            } else {
+                resultDiv.textContent = "Không thể tính toán. Vui lòng kiểm tra lại thông tin.";
+                resultDiv.classList.remove('hidden');
+            }
+        }
+
+        // Cập nhật label của input score khi thay đổi loại đầu vào
+        document.getElementById('input_type').addEventListener('change', function() {
+            const selectedType = this.value;
+            const scoreLabel = document.getElementById('score_label');
+            scoreLabel.textContent = CONVERSION_DATA[selectedType].label;
+            // Đặt placeholder mặc định cho các phương thức còn lại
+            document.getElementById('score').placeholder = "Ví dụ: 80";
+        });
+
+        // Khởi tạo label ban đầu khi tải trang
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const initialType = document.getElementById('input_type').value;
+            const scoreLabel = document.getElementById('score_label');
+            scoreLabel.textContent = CONVERSION_DATA[initialType].label;
+            // Đặt placeholder mặc định cho các phương thức còn lại
+            document.getElementById('score').placeholder = "Ví dụ: 80";
+        });
+    </script>
+</body>
+</html>
